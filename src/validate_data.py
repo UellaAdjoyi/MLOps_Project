@@ -22,7 +22,50 @@ def validate_dataset(raw_root: Path) -> dict:
     TODO: implement the checks and return a JSON-serializable report.
     The report must not contain timestamps because it is a DVC output.
     """
-    raise NotImplementedError("Implement the Core data-quality gate")
+    report = {"status": "PASS", "total_images": 0, "splits": {}, "errors": []}
+    for split, expected_count in EXPECTED_SPLITS.items():
+        split_path = raw_root / split
+        if not split_path.is_dir():
+            report["errors"].append(f"Missing split: {split}")
+            continue
+
+        classes = sorted(d for d in split_path.iterdir() if d.is_dir())
+        class_names = {directory.name for directory in classes}
+        if class_names != EXPECTED_CLASSES:
+            report["errors"].append(
+                f"Split '{split}' has unexpected classes: {sorted(class_names)}"
+            )
+
+        class_counts = {}
+        for cls in classes:
+            images = sorted(
+                path
+                for path in cls.rglob("*")
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+            )
+            class_counts[cls.name] = len(images)
+            if not images:
+                report["errors"].append(
+                    f"Class '{cls.name}' in split '{split}' is empty"
+                )
+            for img_path in images:
+                with Image.open(img_path) as img:
+                    img.load()
+
+        image_count = sum(class_counts.values())
+        report["splits"][split] = {
+            "images": image_count,
+            "class_counts": class_counts,
+        }
+        report["total_images"] += image_count
+        if image_count != expected_count:
+            report["errors"].append(
+                f"Split '{split}' has {image_count} images, expected {expected_count}"
+            )
+
+    if report["errors"]:
+        raise RuntimeError("; ".join(report["errors"]))
+    return report
 
 
 def main() -> None:
