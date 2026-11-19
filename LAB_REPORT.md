@@ -10,4 +10,24 @@
 | DVC Pipeline | Pipeline stages are undefined | Workflow cannot be reproduced automatically | Define stages, dependencies and outputs |
 
 
-Engineering checkpoint 1: A trained model file alone does not prove reproducibility because it does not contain the exact code version, dataset version, environment configuration, random seed or training parameters used to produce it.
+# Engineering checkpoint 1: 
+ A trained model file alone does not prove reproducibility because it does not contain the exact code version, dataset version, environment configuration, random seed or training parameters used to produce it.
+
+
+## Environment Files
+
+### pyproject.toml
+
+The `pyproject.toml` file defines the project's metadata, dependencies and development tools. It specifies which Python packages are required and their version constraints. This file serves as the main configuration file for the project and allows the environment to be recreated consistently.
+
+### uv.lock
+
+The `uv.lock` file locks the exact versions of all direct and transitive dependencies used by the project. Unlike pyproject.toml, which may specify version ranges, the lock file ensures that every developer installs exactly the same package versions, improving reproducibility across different machines.
+
+### .venv/
+
+The `.venv/` directory contains the local Python virtual environment created for the project. It isolates project dependencies from the system-wide Python installation, preventing conflicts with other projects and ensuring that the correct packages are used during development and testing.
+
+
+# Engineering checkpoint 2:
+random_state = 42 doesn't guarantee bit-for-bit results on every CPU/GPU environments beacause different hardware architectures, library versions, CUDA/CUdnn implementations and floating-point computations can produce small numerical differences even when the same seed is used
