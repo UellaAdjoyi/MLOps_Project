@@ -1,0 +1,72 @@
+stages:
+  validate:
+    cmd: uv run --locked python -m src.validate_data
+    deps:
+      - data/raw
+      - src/validate_data.py
+      - pyproject.toml
+      - uv.lock
+    outs:
+      - reports/data_quality.json
+  prepare:
+    cmd: uv run --locked python -m src.prepare
+    deps:
+      - data/raw
+      - reports/data_quality.json
+      - src/prepare.py
+      - pyproject.toml
+      - uv.lock
+    params:
+      - data.image_size
+    outs:
+      - data/processed
+    metrics:
+      - reports/data_summary.json
+  train:
+    cmd: uv run --locked python -m src.train
+    deps:
+      - data/processed
+      - src/train.py
+      - src/model.py
+      - src/data.py
+      - src/reproducibility.py
+      - src/provenance.py
+      - pyproject.toml
+      - uv.lock
+    params:
+      - data.image_size
+      - train.random_state
+      - train.dropout
+      - train.learning_rate
+      - train.epochs
+      - augmentation.enabled
+      - compute.device
+      - tracking.uri
+      - tracking.experiment
+    outs:
+      - models/model.pt
+    metrics:
+      - reports/train_summary.json
+    plots:
+      - reports/training_curves.png
+
+  evaluate:
+    cmd: uv run --locked python -m src.evaluate
+    deps:
+      - data/processed
+      - src/evaluate.py
+      - src/data.py
+      - src/provenance.py
+      - pyproject.toml
+      - uv.lock
+    params:
+      - selection.run_id
+      - tracking.uri
+      - tracking.experiment
+      - compute.device
+      - data.image_size
+      - evaluation.batch_size
+    metrics:
+      - reports/test_metrics.json
+    plots:
+      - reports/test_confusion_matrix.png

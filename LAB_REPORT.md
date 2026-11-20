@@ -31,3 +31,32 @@ The `.venv/` directory contains the local Python virtual environment created for
 
 # Engineering checkpoint 2:
 random_state = 42 doesn't guarantee bit-for-bit results on every CPU/GPU environments beacause different hardware architectures, library versions, CUDA/CUdnn implementations and floating-point computations can produce small numerical differences even when the same seed is used
+
+# Engineering checkpoint 3:
+- The Git remote stores project files such as code, configuration, reports and DVC metadata files
+- The DVC remote stores the large tracked data files, including the raw image dataset and other cached artifacts
+- No, `git push` only transfers Git-tracked files
+
+# Milestone 4 - Answers
+
+## Q1
+Yes. PREPARE depends on `reports/data_quality.json` because it must run after successful validation.
+
+## Q2
+Yes. PREPARE directly reads `data/raw`, so changes in raw data must trigger re-execution.
+
+## Q3
+TRAIN should track all parameters that affect preprocessing, augmentation, training, and reproducibility.
+
+## Q4
+EVALUATE must track `selection.run_id` because changing the selected MLflow run changes the evaluated model.
+
+## Q5
+Metrics:
+- `reports/train_summary.json`
+- `reports/test_metrics.json`
+
+## Q6
+Plots:
+- `reports/training_curves.png`
+- `reports/test_confusion_matrix.png`
